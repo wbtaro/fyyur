@@ -45,7 +45,9 @@ app.jinja_env.filters['datetime'] = format_datetime
 
 @app.route('/')
 def index():
-    return render_template('pages/home.html')
+    venues = Venue.query.order_by(db.desc(Venue.created_at)).limit(10).all()
+    artists = Artist.query.order_by(db.desc(Artist.created_at)).limit(10).all()
+    return render_template('pages/home.html', venues=venues, artists=artists)
 
 
 #  Venues
@@ -124,6 +126,8 @@ def create_venue_submission():
             website_link=form.website_link.data,
             seeking_talent=form.seeking_talent.data,
             seeking_description=form.seeking_description.data,
+            created_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
 
         for genre in form.genres.data:
@@ -242,6 +246,7 @@ def edit_artist_submission(artist_id):
         artist.website_link = form.website_link.data
         artist.seeking_venue = form.seeking_venue.data
         artist.seeking_description = form.seeking_description.data
+        artist.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         for genre in form.genres.data:
             artist_genre = Genre.query.filter_by(name=genre).one()
@@ -308,6 +313,7 @@ def edit_venue_submission(venue_id):
         venue.website_link = form.website_link.data
         venue.seeking_talent = form.seeking_talent.data
         venue.seeking_description = form.seeking_description.data
+        venue.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         for genre in form.genres.data:
             venue_genre = Genre.query.filter_by(name=genre).one()
@@ -354,6 +360,8 @@ def create_artist_submission():
             website_link=form.website_link.data,
             seeking_venue=form.seeking_venue.data,
             seeking_description=form.seeking_description.data,
+            created_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
 
         for genre in form.genres.data:
