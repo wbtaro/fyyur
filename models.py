@@ -120,6 +120,12 @@ class Artist(db.Model):
         lazy=True,
         cascade='all, delete, delete-orphan'
     )
+    available_datetimes = db.relationship(
+        'ArtistAvailableDatetime',
+        backref='artist',
+        lazy=True,
+        cascade='all, delete, delete-orphan'
+    )
 
     @property
     def upcoming_shows(self):
@@ -159,6 +165,31 @@ class Show(db.Model):
         nullable=False
     )
     start_time = db.Column(
+        db.DateTime,
+        nullable=False
+    )
+    end_time = db.Column(
+        db.DateTime,
+        nullable=False
+    )
+    created_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+
+
+class ArtistAvailableDatetime(db.Model):
+    __tablename__ = 'artist_available_datetimes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(
+        db.Integer,
+        db.ForeignKey('artists.id', ondelete='cascade'),
+        nullable=False
+    )
+    start_time = db.Column(
+        db.DateTime,
+        nullable=False
+    )
+    end_time = db.Column(
         db.DateTime,
         nullable=False
     )

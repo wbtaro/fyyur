@@ -1,6 +1,7 @@
 from datetime import datetime
 import re
 from flask_wtf import Form
+from werkzeug.utils import ArgumentValidationError
 from wtforms import (
     StringField,
     SelectField,
@@ -26,6 +27,34 @@ def validate_genres(form, field):
             raise ValidationError('genres: invalid genre')
 
 
+def validate_available_start_and_end_time(form, field):
+    if not (form.available_start_time.data and form.available_end_time.data):
+        raise ValidationError('Input both Start Time and End Time')
+
+    if form.available_start_time.data >= form.available_end_time.data:
+        raise ValidationError('End Time must be later than Start Time')
+
+
+def validate_start_and_end_time(form, field):
+    if form.start_time.data >= form.end_time.data:
+        raise ValidationError('End Time must be later than Start Time')
+
+
+def artist_is_available(form, field):
+    artist = Artist.query.get(form.artist_id.data)
+    start_time = form.start_time.data
+    end_time = form.end_time.data
+    if artist.available_datetimes:
+        for available_time in artist.available_datetimes:
+            if not (
+                available_time.start_time <= start_time and
+                available_time.end_time >= end_time
+            ):
+                raise ValidationError(
+                    'this artist is not available in this time'
+                )
+
+
 class ShowForm(Form):
     artist_id = StringField(
         'artist_id'
@@ -35,7 +64,17 @@ class ShowForm(Form):
     )
     start_time = DateTimeField(
         'start_time',
-        validators=[DataRequired()],
+        validators=[
+            DataRequired(),
+            validate_start_and_end_time,
+            artist_is_available
+        ],
+        default=datetime.today(),
+        format='%Y-%m-%d %H:%M'
+    )
+    end_time = DateTimeField(
+        'end_time',
+        validators=[DataRequired(), validate_start_and_end_time],
         default=datetime.today(),
         format='%Y-%m-%d %H:%M'
     )
@@ -266,5 +305,17 @@ class ArtistForm(Form):
     seeking_venue = BooleanField('seeking_venue')
 
     seeking_description = StringField(
-            'seeking_description'
-     )
+        'seeking_description'
+    )
+
+    available_start_time = DateTimeField(
+        'available_start_time',
+        validators=[Optional(), validate_available_start_and_end_time],
+        format='%Y-%m-%d %H:%M'
+    )
+
+    available_end_time = DateTimeField(
+        'available_end_time',
+        validators=[Optional(), validate_available_start_and_end_time],
+        format='%Y-%m-%d %H:%M'
+    )

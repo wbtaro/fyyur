@@ -38,6 +38,13 @@
 			<i class="fas fa-moon"></i> Not currently seeking performance venues
 		</p>
 		{% endif %}
+		{% for available_time in artist.available_datetimes %}
+		<br>
+		<h4>Available Time</h4>
+		<p>Start Time:  {{ available_time.start_time }}  </p>
+		<p>End Time:  {{ available_time.end_time }}  </p>
+		{% endfor %}
+		<br>
 	</div>
 	<div class="col-sm-6">
 		<img src="{{ artist.image_link }}" alt="Artist Image" />

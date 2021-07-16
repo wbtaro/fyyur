@@ -18,7 +18,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from sqlalchemy.orm import backref
 from .forms import *
-from .models import Venue, Artist, Genre, Show
+from .models import ArtistAvailableDatetime, Venue, Artist, Genre, Show
 from . import app, db
 
 # ----------------------------------------------------------------------------#
@@ -210,6 +210,9 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     artist = Artist.query.get(artist_id)
+    for a in artist.available_datetimes:
+        print(a.start_time)
+        print(a.end_time)
     return render_template('pages/show_artist.html', artist=artist)
 
 
@@ -230,6 +233,11 @@ def edit_artist(artist_id):
     form.seeking_venue.data = artist.seeking_venue
     form.seeking_description.data = artist.seeking_description
     form.genres.data = [genre for genre in artist.genres]
+    if artist.available_datetimes:
+        form.available_start_time.data = \
+            artist.available_datetimes[0].start_time
+        form.available_end_time.data = \
+            artist.available_datetimes[0].end_time
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
@@ -261,6 +269,14 @@ def edit_artist_submission(artist_id):
         artist.seeking_venue = form.seeking_venue.data
         artist.seeking_description = form.seeking_description.data
         artist.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        artist.available_datetimes.clear()
+        if form.available_start_time.data:
+            available_datetime = ArtistAvailableDatetime(
+                start_time=form.available_start_time.data,
+                end_time=form.available_end_time.data
+            )
+            artist.available_datetimes.append(available_datetime)
 
         for genre in form.genres.data:
             artist_genre = Genre.query.filter_by(name=genre).one()
@@ -392,6 +408,13 @@ def create_artist_submission():
             updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
 
+        if form.available_start_time.data:
+            available_datetime = ArtistAvailableDatetime(
+                start_time=form.available_start_time.data,
+                end_time=form.available_end_time.data
+            )
+            artist.available_datetimes.append(available_datetime)
+
         for genre in form.genres.data:
             artist_genre = Genre.query.filter_by(name=genre).one()
             artist.genres.append(artist_genre)
@@ -433,7 +456,6 @@ def create_shows():
 def create_show_submission():
     try:
         form = ShowForm(request.form)
-        print(form.errors)
         if not form.validate():
             print(form.errors)
             for item, error in form.errors.items():
@@ -443,7 +465,8 @@ def create_show_submission():
         show = Show(
             artist_id=form.artist_id.data,
             venue_id=form.venue_id.data,
-            start_time=form.start_time.data
+            start_time=form.start_time.data,
+            end_time=form.end_time.data
         )
 
         db.session.add(show)
