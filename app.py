@@ -426,9 +426,39 @@ def create_show_submission():
     return render_template('pages/home.html')
 
 
+@app.errorhandler(400)
+def bad_request_error(error):
+    return render_template('errors/400.html'), 400
+
+
+@app.errorhandler(401)
+def unauthorized_error(error):
+    return render_template('errors/401.html'), 401
+
+
+@app.errorhandler(403)
+def access_frobidden_error(error):
+    return render_template('errors/403.html'), 403
+
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
+
+
+@app.errorhandler(405)
+def method_not_allowed_error(error):
+    return render_template('errors/405.html'), 405
+
+
+@app.errorhandler(409)
+def conflict_error(error):
+    return render_template('errors/409.html'), 409
+
+
+@app.errorhandler(422)
+def unprocessable_entity_error(error):
+    return render_template('errors/422.html'), 422
 
 
 @app.errorhandler(500)
