@@ -115,6 +115,11 @@ def create_venue_form():
 def create_venue_submission():
     try:
         form = VenueForm(request.form)
+        if not form.validate():
+            for item, error in form.errors.items():
+                flash(item + ': ' + error[0])
+            return render_template('forms/new_venue.html', form=form)
+
         venue = Venue(
             name=form.name.data,
             city=form.city.data,
@@ -143,7 +148,7 @@ def create_venue_submission():
         app.logger.warning(e)
         flash(
             'An error occurred. Venue ' +
-            venue.name +
+            form.name.data +
             ' could not be listed.'
         )
         return render_template('forms/new_venue.html', form=form)
@@ -234,6 +239,15 @@ def edit_artist_submission(artist_id):
         form = ArtistForm(request.form)
         artist = Artist.query.get(artist_id)
 
+        if not form.validate():
+            for item, error in form.errors.items():
+                flash(item + ': ' + error[0])
+            return render_template(
+                'forms/edit_artist.html',
+                form=form,
+                artist=artist
+            )
+
         artist.genres.clear()
         db.session.add(artist)
 
@@ -300,6 +314,15 @@ def edit_venue_submission(venue_id):
         form = VenueForm(request.form)
         venue = Venue.query.get(venue_id)
 
+        if not form.validate():
+            for item, error in form.errors.items():
+                flash(item + ': ' + error[0])
+            return render_template(
+                'forms/edit_venue.html',
+                form=form,
+                venue=venue
+            )
+
         venue.genres.clear()
         db.session.add(venue)
 
@@ -350,6 +373,11 @@ def create_artist_form():
 def create_artist_submission():
     try:
         form = ArtistForm(request.form)
+        if not form.validate():
+            for item, error in form.errors.items():
+                flash(item + ': ' + error[0])
+            return render_template('forms/new_artist.html', form=form)
+
         artist = Artist(
             name=form.name.data,
             city=form.city.data,
@@ -377,7 +405,7 @@ def create_artist_submission():
         app.logger.warning(e)
         flash(
             'An error occurred. Venue ' +
-            artist.name +
+            form.name.data +
             ' could not be listed.'
         )
     finally:
@@ -405,6 +433,13 @@ def create_shows():
 def create_show_submission():
     try:
         form = ShowForm(request.form)
+        print(form.errors)
+        if not form.validate():
+            print(form.errors)
+            for item, error in form.errors.items():
+                flash(item + ': ' + error[0])
+                return render_template('forms/new_show.html', form=form)
+
         show = Show(
             artist_id=form.artist_id.data,
             venue_id=form.venue_id.data,

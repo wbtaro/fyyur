@@ -7,13 +7,13 @@ venue_genres = db.Table(
     db.Column(
         'venue_id',
         db.Integer,
-        db.ForeignKey('Venue.id', ondelete="cascade"),
+        db.ForeignKey('venues.id', ondelete="cascade"),
         primary_key=True
     ),
     db.Column(
         'genre',
         db.String,
-        db.ForeignKey('Genre.name', ondelete="cascade"),
+        db.ForeignKey('genres.name', ondelete="cascade"),
         primary_key=True
     )
 )
@@ -23,20 +23,20 @@ artist_genres = db.Table(
     db.Column(
         'artist_id',
         db.Integer,
-        db.ForeignKey('Artist.id', ondelete="cascade"),
+        db.ForeignKey('artists.id', ondelete="cascade"),
         primary_key=True
     ),
     db.Column(
         'genre',
         db.String,
-        db.ForeignKey('Genre.name', ondelete="cascade"),
+        db.ForeignKey('genres.name', ondelete="cascade"),
         primary_key=True
     )
 )
 
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -88,12 +88,12 @@ class Venue(db.Model):
 
 
 class Genre(db.Model):
-    __tablename__ = 'Genre'
+    __tablename__ = 'genres'
     name = db.Column(db.String, primary_key=True)
 
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -145,17 +145,17 @@ class Artist(db.Model):
 
 
 class Show(db.Model):
-    __tablename__ = 'Show'
+    __tablename__ = 'shows'
 
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(
         db.Integer,
-        db.ForeignKey('Artist.id', ondelete='cascade'),
+        db.ForeignKey('artists.id', ondelete='cascade'),
         nullable=False
     )
     venue_id = db.Column(
         db.Integer,
-        db.ForeignKey('Venue.id', ondelete='cascade'),
+        db.ForeignKey('venues.id', ondelete='cascade'),
         nullable=False
     )
     start_time = db.Column(

@@ -11,3 +11,7 @@ class Config(object):
 
     # Connect to the database
     SQLALCHEMY_DATABASE_URI = 'postgresql://ryotaro:passw0rd@localhost:5432/fyyur'
+
+    # CSRF token with wtforms
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_SECRET_KEY = 'wtf secret key'
