@@ -10,7 +10,16 @@ class Config(object):
     DEBUG = True
 
     # Connect to the database
-    SQLALCHEMY_DATABASE_URI = 'postgresql://ryotaro:passw0rd@localhost:5432/fyyur'
+    DATABASE_NAME = 'fyyur'
+    username = 'ryotaro'
+    password = 'passw0rd'
+    url = 'localhost:5432'
+    SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}/{}".format(
+        username,
+        password,
+        url,
+        DATABASE_NAME
+    )
 
     # CSRF token with wtforms
     WTF_CSRF_ENABLED = True
