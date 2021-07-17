@@ -39,6 +39,20 @@ def format_datetime(value, format='medium'):
 app.jinja_env.filters['datetime'] = format_datetime
 
 # ----------------------------------------------------------------------------#
+# Utility methods.
+# ----------------------------------------------------------------------------#
+
+def add_nested_errors_to_flash_msg(nested_errors):
+    for field, error_msgs in nested_errors.items():
+        for error_msg in error_msgs:
+            if isinstance(error_msg, dict):
+                add_nested_errors_to_flash_msg(error_msg)
+            else:
+                flash(field + ': ' + error_msg)
+
+    return
+
+# ----------------------------------------------------------------------------#
 # Controllers.
 # ----------------------------------------------------------------------------#
 
@@ -233,11 +247,13 @@ def edit_artist(artist_id):
     form.seeking_venue.data = artist.seeking_venue
     form.seeking_description.data = artist.seeking_description
     form.genres.data = [genre for genre in artist.genres]
-    if artist.available_datetimes:
-        form.available_start_time.data = \
-            artist.available_datetimes[0].start_time
-        form.available_end_time.data = \
-            artist.available_datetimes[0].end_time
+
+    for form_available_time, current_available_time in \
+        zip(form.available_times, artist.available_datetimes):
+        print(form_available_time)
+        form_available_time.start_time.data = current_available_time.start_time
+        form_available_time.end_time.data = current_available_time.end_time
+
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
@@ -248,13 +264,8 @@ def edit_artist_submission(artist_id):
         artist = Artist.query.get(artist_id)
 
         if not form.validate():
-            for item, error in form.errors.items():
-                flash(item + ': ' + error[0])
-            return render_template(
-                'forms/edit_artist.html',
-                form=form,
-                artist=artist
-            )
+            add_nested_errors_to_flash_msg(form.errors)
+            return render_template('forms/new_artist.html', form=form)
 
         artist.genres.clear()
         db.session.add(artist)
@@ -271,11 +282,18 @@ def edit_artist_submission(artist_id):
         artist.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         artist.available_datetimes.clear()
-        if form.available_start_time.data:
+        for available_time in form.available_times.data:
+            start_time = available_time.get('start_time') 
+            end_time = available_time.get('end_time')
+            # if bot start_time and end_ time is blank, do not save
+            if not (start_time or end_time):
+                continue
+            
             available_datetime = ArtistAvailableDatetime(
-                start_time=form.available_start_time.data,
-                end_time=form.available_end_time.data
+                start_time=start_time,
+                end_time=end_time
             )
+
             artist.available_datetimes.append(available_datetime)
 
         for genre in form.genres.data:
@@ -290,7 +308,7 @@ def edit_artist_submission(artist_id):
         db.session.rollback()
         app.logger.warning(e)
         flash(
-            'An error occurred. Venue ' +
+            'An error occurred. Artist ' +
             artist.name +
             ' could not be updated.'
         )
@@ -331,13 +349,8 @@ def edit_venue_submission(venue_id):
         venue = Venue.query.get(venue_id)
 
         if not form.validate():
-            for item, error in form.errors.items():
-                flash(item + ': ' + error[0])
-            return render_template(
-                'forms/edit_venue.html',
-                form=form,
-                venue=venue
-            )
+            add_nested_errors_to_flash_msg(form.errors)
+            return render_template('forms/new_artist.html', form=form)
 
         venue.genres.clear()
         db.session.add(venue)
@@ -390,8 +403,7 @@ def create_artist_submission():
     try:
         form = ArtistForm(request.form)
         if not form.validate():
-            for item, error in form.errors.items():
-                flash(item + ': ' + error[0])
+            add_nested_errors_to_flash_msg(form.errors)
             return render_template('forms/new_artist.html', form=form)
 
         artist = Artist(
@@ -408,11 +420,18 @@ def create_artist_submission():
             updated_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         )
 
-        if form.available_start_time.data:
+        for available_time in form.available_times.data:
+            start_time = available_time.get('start_time') 
+            end_time = available_time.get('end_time')
+            # if bot start_time and end_ time is blank, do not save
+            if not (start_time or end_time):
+                continue
+            
             available_datetime = ArtistAvailableDatetime(
-                start_time=form.available_start_time.data,
-                end_time=form.available_end_time.data
+                start_time=start_time,
+                end_time=end_time
             )
+
             artist.available_datetimes.append(available_datetime)
 
         for genre in form.genres.data:
@@ -427,14 +446,15 @@ def create_artist_submission():
         db.session.rollback()
         app.logger.warning(e)
         flash(
-            'An error occurred. Venue ' +
+            'An error occurred. Artist ' +
             form.name.data +
             ' could not be listed.'
         )
     finally:
         db.session.close()
 
-    return render_template('pages/home.html')
+    # return render_template('pages/home.html')
+    return redirect(url_for('index'))
 
 
 #  Shows

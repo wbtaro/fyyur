@@ -54,13 +54,15 @@
           {{ form.seeking_description(class_ = 'form-control', autofocus = true) }}
       </div>
       <br>
-      <h4>Available Time</h4>
+      {% for available_time in form.available_times %}
       <div class="form-group">
-          <label for="available_start_time">Start Time</label>
-          {{ form.available_start_time(class_ = 'form-control', placeholder='YYYY-MM-DD HH:MM', autofocus = true) }}
-          <label for="available_end_time">End Time</label>
-          {{ form.available_end_time(class_ = 'form-control', placeholder='YYYY-MM-DD HH:MM', autofocus = true) }}
+          <h4>Available Time {{ loop.index }}</h4>
+          <label for="available_time.start_time">Start Time</label>
+          {{ available_time.start_time(class_ = 'form-control', placeholder='YYYY-MM-DD HH:MM', autofocus = true) }}
+          <label for="available_time.end_time">End Time</label>
+          {{ available_time.end_time(class_ = 'form-control', placeholder='YYYY-MM-DD HH:MM', autofocus = true) }}
       </div>
+      {% endfor %}
       <br>
       <input type="submit" value="Edit Artist" class="btn btn-primary btn-lg btn-block">
     </form>

@@ -7,8 +7,10 @@ from wtforms import (
     SelectField,
     SelectMultipleField,
     DateTimeField,
-    BooleanField
+    BooleanField,
+    FieldList
 )
+from wtforms.fields.core import FormField
 from wtforms.validators import (
     DataRequired,
     URL,
@@ -26,12 +28,12 @@ def validate_genres(form, field):
         if genre not in expected_genres:
             raise ValidationError('genres: invalid genre')
 
-
 def validate_available_start_and_end_time(form, field):
-    if not (form.available_start_time.data and form.available_end_time.data):
+    if not (form.start_time.data or form.end_time.data):
+        pass
+    elif not (form.start_time.data and form.end_time.data):
         raise ValidationError('Input both Start Time and End Time')
-
-    if form.available_start_time.data >= form.available_end_time.data:
+    elif form.start_time.data >= form.end_time.data:
         raise ValidationError('End Time must be later than Start Time')
 
 
@@ -44,15 +46,18 @@ def artist_is_available(form, field):
     artist = Artist.query.get(form.artist_id.data)
     start_time = form.start_time.data
     end_time = form.end_time.data
-    if artist.available_datetimes:
-        for available_time in artist.available_datetimes:
-            if not (
-                available_time.start_time <= start_time and
-                available_time.end_time >= end_time
-            ):
-                raise ValidationError(
-                    'this artist is not available in this time'
-                )
+    available = False
+    for available_time in artist.available_datetimes:
+        if (
+            available_time.start_time <= start_time and
+            available_time.end_time >= end_time
+        ):
+            available = True
+
+    if not available:
+        raise ValidationError(
+            'this artist is not available in this time'
+        )
 
 
 class ShowForm(Form):
@@ -202,6 +207,21 @@ class VenueForm(Form):
         'seeking_description'
     )
 
+class AvailableTimeForm(Form):
+    class Meta:
+        csrf = False
+
+    start_time = DateTimeField(
+        'start_time',
+        validators=[Optional(), validate_available_start_and_end_time],
+        format='%Y-%m-%d %H:%M'
+    )
+
+    end_time = DateTimeField(
+        'end_time',
+        validators=[Optional(), validate_available_start_and_end_time],
+        format='%Y-%m-%d %H:%M'
+    )
 
 class ArtistForm(Form):
     name = StringField(
@@ -308,14 +328,8 @@ class ArtistForm(Form):
         'seeking_description'
     )
 
-    available_start_time = DateTimeField(
-        'available_start_time',
-        validators=[Optional(), validate_available_start_and_end_time],
-        format='%Y-%m-%d %H:%M'
-    )
-
-    available_end_time = DateTimeField(
-        'available_end_time',
-        validators=[Optional(), validate_available_start_and_end_time],
-        format='%Y-%m-%d %H:%M'
-    )
+    available_times = FieldList(
+        FormField(AvailableTimeForm),
+        min_entries=3,
+        max_entries=3
+        )
